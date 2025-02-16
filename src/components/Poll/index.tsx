@@ -126,41 +126,75 @@ export const PollingApp = () => {
         </button>
       </div>
 
-      {polls.map((poll) => (
-        <div
-          key={poll.id}
-          style={{
-            padding: "15px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            marginBottom: "15px",
-          }}
-        >
-          <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>
-            {poll.question}
-          </h2>
-          {poll.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => votePoll(poll.id, index)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                cursor: "pointer",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span>{option}</span>
-              <span style={{ fontWeight: "bold" }}>{poll.votes[index]}</span>
-            </button>
-          ))}
-        </div>
-      ))}
+      {polls.map((poll) => {
+        const totalVotes = poll.votes.reduce((acc, v) => acc + v, 0);
+        return (
+          <div
+            key={poll.id}
+            style={{
+              padding: "15px",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              marginBottom: "15px",
+            }}
+          >
+            <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>
+              {poll.question}
+            </h2>
+            {poll.options.map((option, index) => {
+              const percentage =
+                totalVotes > 0 ? (poll.votes[index] / totalVotes) * 100 : 0;
+              return (
+                <div
+                  key={index}
+                  style={{ marginTop: "5px", position: "relative" }}
+                >
+                  <button
+                    onClick={() => votePoll(poll.id, index)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      backgroundColor: "#f9f9f9",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        height: "100%",
+                        width: `${percentage}%`,
+                        backgroundColor: "#0073b1",
+                        borderRadius: "4px",
+                        opacity: 0.2,
+                      }}
+                    ></div>
+                    <span style={{ position: "relative", zIndex: 1 }}>
+                      {option}
+                    </span>
+                    <span
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {poll.votes[index]} ({percentage.toFixed(1)}%)
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 };

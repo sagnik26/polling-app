@@ -1,46 +1,98 @@
-# Getting Started with Create React App
+# Polling App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
 
-## Available Scripts
+This is a simple polling application built using **React** and **Supabase**. Users can:
 
-In the project directory, you can run:
+- Create polls with a question and multiple options.
+- Vote on polls.
+- View real-time poll results (auto-refresh every 5 seconds) with a LinkedIn-styleed percentage bar.
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend**: React with TypeScript
+- **Backend**: Supabase (PostgreSQL)
+- **Hosting**: Netlify (Frontend), Supabase (Backend)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Features
 
-### `npm test`
+- Users can create a poll with up to four options.
+- Polls are stored in a Supabase database.
+- Votes are recorded and updated in real-time.
+- Poll results display percentage bars for each option, similar to LinkedIn.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Database Schema
 
-### `npm run build`
+The following schema is used in Supabase:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Table: `polls`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Column Name  | Data Type | Constraints                               | Description                     |
+| ------------ | --------- | ----------------------------------------- | ------------------------------- |
+| `id`         | UUID      | Primary Key, Default: `gen_random_uuid()` | Unique identifier for each poll |
+| `question`   | Text      | Not Null                                  | The poll question               |
+| `options`    | JSONB     | Not Null                                  | Array of poll options           |
+| `votes`      | JSONB     | Default: `[]`                             | Array of vote counts per option |
+| `created_at` | Timestamp | Default: `now()`                          | Timestamp of poll creation      |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### SQL to create the table:
 
-### `npm run eject`
+```sql
+CREATE TABLE polls (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question TEXT NOT NULL,
+    options JSONB NOT NULL,
+    votes JSONB DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT now()
+);
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## API Endpoints
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 1. Fetch All Polls
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+_Method_ : `GET`
+_Endpoint_: `/polls`
+_Query_ :
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+const { data, error } = await supabase.from("polls").select("*").order("created_at", { ascending: false });
+```
 
-## Learn More
+### 2. Create a Poll
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+_Method_ : `POST`
+_Endpoint_: `/polls`
+_Payload_ :
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+{
+  "question": "What's your favorite programming language?",
+  "options": ["JavaScript", "Python", "Go", "Rust"],
+  "votes": [0, 0, 0, 0]
+}
+```
+
+_Query_ :
+
+```
+await supabase.from("polls").insert([{ question, options, votes }]);
+```
+
+### 2. Vote a Poll
+
+_Method_ : `PATCH`
+_Endpoint_: `/polls/:id`
+_Payload_ :
+
+```
+{
+  "votes": [5, 3, 2, 1]
+}
+```
+
+_Query_ :
+
+```
+await supabase.from("polls").update({ votes: newVotes }).eq("id", pollId);
+```
