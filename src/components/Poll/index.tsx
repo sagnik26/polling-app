@@ -17,7 +17,10 @@ export const PollingApp = () => {
   }, []);
 
   const fetchPolls = async () => {
-    const { data, error } = await supabase.from("polls").select("*");
+    const { data, error } = await supabase
+      .from("polls")
+      .select("*")
+      .order("created_at", { ascending: false }); // Ensure consistent order
     if (!error) setPolls(data || []);
   };
 
